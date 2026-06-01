@@ -1,5 +1,117 @@
 const Video = require("../models/Video");
 
+
+// POST - CUSTOM VIDEO RESPONSE
+exports.getVideoStructured = async (req, res) => {
+  try {
+    const { id, api } = req.body;
+
+    if (!id || api !== "Video") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request",
+      });
+    }
+
+    const stage = parseInt(id);
+
+    const videos = await Video.find({ stage });
+
+    // Default buckets (never undefined)
+    const result = {
+      trail: [],
+      basic: [],
+      mid: [],
+      advance: [],
+    };
+
+    videos.forEach((video) => {
+      switch (video.type) {
+        case "free":
+          result.trail.push(video.videoUrl);
+          break;
+
+        case "basic":
+          result.basic.push(video.videoUrl);
+          break;
+
+        case "mid":
+          result.mid.push(video.videoUrl);
+          break;
+
+        case "advance":
+          result.advance.push(video.videoUrl);
+          break;
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Video fetch successfully",
+
+      type: [
+        {
+          type: "Trail Videos",
+          Tcount: result.trail.length,
+          videos: result.trail,
+        },
+      ],
+
+      type2: [
+        {
+          type: "basic Level",
+          count: result.basic.length,
+          videos: result.basic,
+        },
+      ],
+
+      type3: [
+        {
+          type: "medium level",
+          count: result.mid.length,
+          videos: result.mid,
+        },
+      ],
+
+      type4: [
+        {
+          type: "Advance level",
+          count: result.advance.length,
+          videos: result.advance,
+        },
+      ],
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+
+
+// GET BY STAGE (optional keep)
+exports.getByStage = async (req, res) => {
+  try {
+    const stage = Number(req.params.stage);
+    const videos = await Video.find({ stage });
+
+    res.status(200).json({
+      success: true,
+      count: videos.length,
+      data: videos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+const Video = require("../models/Video");
+
 // POST VIDEO
 exports.addVideo = async (req, res) => {
   try {
