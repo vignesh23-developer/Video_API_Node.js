@@ -1,118 +1,92 @@
 const Video = require("../models/Video");
 
-
-// POST - CUSTOM VIDEO RESPONSE
-exports.getVideoStructured = async (req, res) => {
+/**
+ * =========================
+ * ADMIN API (NO USER ID)
+ * =========================
+ * Full video list (all types)
+ */
+exports.getAdminVideos = async (req, res) => {
   try {
-    const { id, api } = req.body;
+    const videos = await Video.find().sort({ createdAt: -1 });
 
-    if (!id || api !== "Video") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid request",
-      });
-    }
-
-    const stage = parseInt(id);
-
-    const videos = await Video.find({ stage });
-
-    // Default buckets (never undefined)
-    const result = {
-      trail: [],
-      basic: [],
-      mid: [],
-      advance: [],
-    };
-
-    videos.forEach((video) => {
-      switch (video.type) {
-        case "free":
-          result.trail.push(video.videoUrl);
-          break;
-
-        case "basic":
-          result.basic.push(video.videoUrl);
-          break;
-
-        case "mid":
-          result.mid.push(video.videoUrl);
-          break;
-
-        case "advance":
-          result.advance.push(video.videoUrl);
-          break;
-      }
-    });
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Video fetch successfully",
-
-      type: [
-        {
-          type: "Trail Videos",
-          Tcount: result.trail.length,
-          videos: result.trail,
-        },
-      ],
-
-      type2: [
-        {
-          type: "basic Level",
-          count: result.basic.length,
-          videos: result.basic,
-        },
-      ],
-
-      type3: [
-        {
-          type: "medium level",
-          count: result.mid.length,
-          videos: result.mid,
-        },
-      ],
-
-      type4: [
-        {
-          type: "Advance level",
-          count: result.advance.length,
-          videos: result.advance,
-        },
-      ],
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-
-
-// GET BY STAGE (optional keep)
-exports.getByStage = async (req, res) => {
-  try {
-    const stage = Number(req.params.stage);
-    const videos = await Video.find({ stage });
-
-    res.status(200).json({
-      success: true,
+      role: "admin",
       count: videos.length,
       data: videos,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
     });
   }
 };
-const Video = require("../models/Video");
 
-// POST VIDEO
+/**
+ * =========================
+ * CUSTOMER API (WITH USER ID)
+ * =========================
+ * Only free + paid videos
+ */
+exports.getUserVideos = async (req, res) => {
+  try {
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "user_id required",
+      });
+    }
+
+    const videos = await Video.find().sort({ createdAt: -1 });
+
+    const result = {
+      free: [],
+      paid: [],
+    };
+
+    videos.forEach((video) => {
+      if (video.type === "free") {
+        result.free.push(video.videoUrl);
+      } else {
+        // everything except free = paid
+        result.paid.push(video.videoUrl);
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      role: "customer",
+      user_id,
+      type: [
+        {
+          name: "Free Videos",
+          count: result.free.length,
+          videos: result.free,
+        },
+        {
+          name: "Paid Videos",
+          count: result.paid.length,
+          videos: result.paid,
+        },
+      ],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * =========================
+ * ADD VIDEO (ADMIN USE)
+ * =========================
+ */
 exports.addVideo = async (req, res) => {
   try {
     const { videoUrl, stage, type } = req.body;
@@ -126,56 +100,12 @@ exports.addVideo = async (req, res) => {
 
     const video = await Video.create({ videoUrl, stage, type });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: video,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-// GET ALL VIDEOS
-exports.getAllVideos = async (req, res) => {
-  try {
-    const videos = await Video.find().sort({ createdAt: 1 });
-
-    const formatted = videos.map((v, i) => ({
-      id: i + 1,
-      videoUrl: v.videoUrl,
-      stage: v.stage,
-      type: v.type,
-    }));
-
-    res.status(200).json({
-      success: true,
-      count: formatted.length,
-      data: formatted,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-// GET BY STAGE
-exports.getByStage = async (req, res) => {
-  try {
-    const stage = Number(req.params.stage);
-    const videos = await Video.find({ stage });
-
-    res.status(200).json({
-      success: true,
-      count: videos.length,
-      data: videos,
-    });
-  } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
     });

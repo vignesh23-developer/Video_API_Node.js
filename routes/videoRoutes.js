@@ -1,24 +1,15 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  addVideo,
-  getAllVideos,
-  getByStage,
-  getVideoStructured
-} = require("../controllers/videoController");
+const videoController = require("../controllers/videoController");
 
-// add video
-router.post("/", addVideo);
+// ADMIN
+router.get("/admin/videos", videoController.getAdminVideos);
 
-// normal get
-router.get("/", getAllVideos);
+// CUSTOMER
+router.post("/user/videos", videoController.getUserVideos);
 
-// get by stage param
-router.get("/stage/:stage", getByStage);
-
-// ⭐ MAIN API (your flutter will call this)
-router.post("/structured", getVideoStructured);
+// ADD VIDEO
+router.post("/add", videoController.addVideo);
 
 module.exports = router;
-

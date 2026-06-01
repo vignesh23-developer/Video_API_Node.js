@@ -10,21 +10,29 @@ exports.signup = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Name, email and password are required",
+        message: "All fields required",
       });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const exists = await User.findOne({ email });
+    if (exists) {
       return res.status(409).json({
         success: false,
-        message: "Email already registered",
+        message: "Email already exists",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 🔥 AUTO INCREMENT LOGIC
+    const counter = await Counter.findOneAndUpdate(
+      { key: "user_id" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
     const user = await User.create({
+      user_id: counter.seq,
       name,
       email,
       password: hashedPassword,
@@ -32,9 +40,8 @@ exports.signup = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Signup successful",
       data: {
-        id: user._id,
+        user_id: user.user_id,
         name: user.name,
         email: user.email,
       },

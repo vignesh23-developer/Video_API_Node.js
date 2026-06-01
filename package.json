@@ -13,10 +13,20 @@
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.1.5"
+    "mongoose": "^9.6.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vignesh23-developer/Video_API_Node.js.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vignesh23-developer/Video_API_Node.js/issues"
+  },
+  "homepage": "https://github.com/vignesh23-developer/Video_API_Node.js#readme"
 }
