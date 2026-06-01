@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const videoRoutes = require("./routes/videoRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/videos", videoRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // DB + Server
 connectDB().then(() => {

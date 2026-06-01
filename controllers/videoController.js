@@ -1,4 +1,6 @@
 const Video = require("../models/Video");
+const Payment = require("../models/Payment");
+
 
 /**
  * =========================
@@ -41,6 +43,12 @@ exports.getUserVideos = async (req, res) => {
       });
     }
 
+    // 🔥 check payment
+    const paidUser = await Payment.findOne({
+      user_id,
+      status: "success",
+    });
+
     const videos = await Video.find().sort({ createdAt: -1 });
 
     const result = {
@@ -52,11 +60,28 @@ exports.getUserVideos = async (req, res) => {
       if (video.type === "free") {
         result.free.push(video.videoUrl);
       } else {
-        // everything except free = paid
         result.paid.push(video.videoUrl);
       }
     });
 
+    // 🔥 FINAL RULE
+    if (!paidUser) {
+      // only free videos
+      return res.status(200).json({
+        success: true,
+        role: "customer",
+        user_id,
+        type: [
+          {
+            name: "Free Videos",
+            count: result.free.length,
+            videos: result.free,
+          },
+        ],
+      });
+    }
+
+    // paid user → full access
     return res.status(200).json({
       success: true,
       role: "customer",
